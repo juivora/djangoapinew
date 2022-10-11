@@ -7,4 +7,4 @@ This __init__ file works same as a default __init__ method in any class OR funct
 """
 
 from .UserSerializer import UserRegistrationSerializer, UserLoginSerializer, UserProfileSerializer
-from .BlogSerializer import BlogSerializer
+from .BlogSerializer import BlogSerializer, BlogUpdateSerializer

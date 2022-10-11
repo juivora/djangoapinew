@@ -7,6 +7,8 @@ from django.contrib.auth.models import Group
 
 from .users import MyUserManager, User
 from .blog import Blog
+from .verify_user import VerifyUser
+
 
 
 #TokenModel = import_callable(getattr(settings, 'REST_AUTH_TOKEN_MODEL', DefaultTokenModel))

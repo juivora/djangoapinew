@@ -1,27 +1,22 @@
 import os
-from urllib import response
-from django.shortcuts import render
-from django.http import HttpResponse
-from account import serializers
-from account.serializers.BlogSerializer import BlogSerializer
-from django.contrib.auth import authenticate
 from django.contrib.auth.tokens import default_token_generator
 from django.conf import settings
+from datetime import datetime
+from boto3.session import Session
 
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework_simplejwt.tokens import RefreshToken
+# from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.decorators import api_view
+# from rest_framework.decorators import api_view
 from rest_framework import viewsets, parsers, generics, status
-from rest_framework.parsers import MultiPartParser
+# from rest_framework.parsers import MultiPartParser
 
 
-from account.renderers import UserRenderer
+# from account.renderers import UserRenderer
 from account.models import Blog
-from datetime import datetime
-from boto3.session import Session
-import os
+# from account import serializers
+from account.serializers import BlogSerializer, BlogUpdateSerializer
 
 
 class GetAllBlogs(APIView):
@@ -43,13 +38,13 @@ class BlogCreateView(APIView):
     def get(self, request, pk=None, format=None):
         id = pk
         user = request.user
+       
         if id is not None:
             # get blogs by specific id for authenticated user only
             blog = Blog.objects.filter(id=id, user=user)
             serializer = BlogSerializer(blog, many=True)
 
             return Response({"message": "Got Successful", "data": serializer.data, "success": True}, status=status.HTTP_200_OK)
-            # return Response(serializer.errors, {"success": False}, status=status.HTTP_400_BAD_REQUEST)
 
         # get blogs of autenticated user
         blogs = Blog.objects.filter(user=user)
@@ -57,7 +52,6 @@ class BlogCreateView(APIView):
         return Response({"message": "Got Successful", "data": serializer.data, "success": True}, status=status.HTTP_200_OK)
 
     def post(self, request, format=None):
-
         serializer = BlogSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
             file_extension = os.path.splitext(str(request.FILES['image']))[1]
@@ -74,9 +68,12 @@ class BlogCreateView(APIView):
 
     def put(self, request, pk=None, format=None):
         user = request.user
-        blog = Blog.objects.get(user=user, id=pk)
+        blog = Blog.objects.filter(user=user.id, id=pk).first()
+      
+        if blog is None:
+            return Response({"success": False, "message": 'This blog owned by someone else.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        serializer = BlogSerializer(blog, data=request.data)
+        serializer = BlogUpdateSerializer(blog, data=request.data)
         if serializer.is_valid(raise_exception=True):
             if request.FILES['image']:
                 file_extension = os.path.splitext(
@@ -114,6 +111,9 @@ class BlogCreateView(APIView):
         return Response(serializer.errors, {"success": False}, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk=None, format=None):
-        blog = Blog.objects.filter(user=request.user, id=pk)
+        blog = Blog.objects.filter(user=request.user.id, id=pk)
+        if not blog:
+            return Response({"success": False, "message": 'This blog is owned by someone else or does not exist.'}, status=status.HTTP_400_BAD_REQUEST)
+
         blog.delete()
-        return Response({"message": "Blog deleted"}, status=status.HTTP_200_OK)
+        return Response({"message": "Blog deleted successfully."}, status=status.HTTP_200_OK)

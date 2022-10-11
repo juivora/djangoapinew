@@ -25,7 +25,7 @@ class Blog(models.Model):
     # image = CharField(_("image"), db_index=True, blank=True, cmax_length=255, required=True)
     # image = S3DirectField(dest='primary_destination', blank=True)
     image = models.FileField(upload_to='media/')
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='blog_user')
     created_at = models.DateTimeField(
         auto_now_add=True, blank=True, null=True, )
     updated_at = models.DateTimeField(auto_now=True, blank=True, null=True, )
